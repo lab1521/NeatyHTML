@@ -1,0 +1,10 @@
+<!-- Rather than running with option dash dash bootstrap
+phpunit \-\-bootstrap vendor/autoload.php tests
+-->
+<phpunit bootstrap="vendor/autoload.php">
+  <testsuites>
+    <testsuite name="NeatyHTML">
+      <directory>tests</directory>
+    </testsuite>
+  </testsuites>
+</phpunit>
