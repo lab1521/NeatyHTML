@@ -50,6 +50,15 @@ class NeatyHTMLTest extends TestCase
         '<img src=x:alert(alt) onerror=eval(src) alt=0>',
     ];
 
+    public function testIFrameTag()
+    {
+        $iframeTag = '<iframe src="https://player.vimeo.com/video/2941443" width="640" height="360" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>';
+        $paragraph = '<p><a href="https://vimeo.com/2941443">HDR Time Lapse</a> from <a href="https://vimeo.com/pererik">Per Erik Sviland</a> on <a href="https://vimeo.com">Vimeo</a>.</p>';
+
+        $neaty = new NeatyHTML($iframeTag . $paragraph);
+        $this->assertEquals($paragraph, $neaty->tidyUp()->html());
+    }
+
     public function testHeadChildTags()
     {
         $styleTag = '<style>@import("xss.css");</style>';
@@ -69,15 +78,6 @@ class NeatyHTMLTest extends TestCase
 
         $neaty = new NeatyHTML($linkTag);
         $this->assertEquals('<a>xxs</a>', $neaty->tidyUp()->html());
-    }
-
-    public function testIFrameTag()
-    {
-        $iframeTag = '<iframe src="https://player.vimeo.com/video/2941443" width="640" height="360" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>';
-        $paragraph = '<p><a href="https://vimeo.com/2941443">HDR Time Lapse</a> from <a href="https://vimeo.com/pererik">Per Erik Sviland</a> on <a href="https://vimeo.com">Vimeo</a>.</p>';
-
-        $neaty = new NeatyHTML($iframeTag . $paragraph);
-        $this->assertEquals($paragraph, $neaty->tidyUp()->html());
     }
 
     // public function testUnClean()

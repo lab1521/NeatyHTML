@@ -24,9 +24,6 @@ class NeatyHTML
 	public function __construct($markup)
 	{
 		$this->markup = $markup;
-		$this->blockList['tagOverrides'] = require 'blockedTagOverrides.php';
-		$this->blockList['tags'] = require 'blockedTags.php';
-		$this->blockList['attr'] = require 'blockedAttributes.php';
 		$this->document = new \DOMDocument('1.0', 'utf-8');
 		$this->loadHtml($markup);
 	}
@@ -55,6 +52,47 @@ class NeatyHTML
 			->item(0);
 	}
 
+	public function tagOverrides($overrides = [])
+	{
+		return $this->setupConfigKeys('tagOverrides', $overrides);
+	}
+
+	public function blockedTags($tags = [])
+	{
+		return $this->setupConfigKeys('tags', $tags);
+	}
+
+	public function blockedAttributes($attributes = [])
+	{
+		return $this->setupConfigKeys('attr', $attributes);
+	}
+
+	public function checkTagAttribute($tag, $attributeName, $attributeValue = '')
+	{
+		$tagOverrides = $this->tagOverrides();
+
+		if (!isset($tagOverrides[$tag])) return false;
+
+		$allowedValues = array_reduce($tagOverrides[$tag],
+			function($carry, $attributes) use ($attributeName) {
+				if ($attributes['attribute'] === $attributeName) {
+					return $carry + $attributes['values'];
+				}
+			}, []);
+
+		$protocols = array('http:' => '', 'https:' => '');
+		$attributeValue = strtr($attributeValue, $protocols);
+
+		if (!$attributeValue) return false;
+
+		return array_reduce($allowedValues,
+			function ($carry, $allowed) use ($attributeValue) {
+				if ($carry === true) return $carry;
+				$foundAtPosition = strpos($attributeValue, $allowed);
+				return $foundAtPosition === 0;
+			}, false);
+	}
+
 	public function tidyUp()
 	{
 		$cleaner = new \tidy;
@@ -65,7 +103,6 @@ class NeatyHTML
 
 		$xpath = new \DOMXPath($this->document);
 
-		$tagOverrides = $this->blockList['tagOverrides'];
 		$blockedNodes = array_map(
 			function($tag) use ($xpath){
 				$paths = $xpath->query("//{$tag}");
@@ -78,12 +115,44 @@ class NeatyHTML
 					'items' => $items
 				];
 			},
-			$this->blockList['tags']
+			$this->blockedTags()
 		);
+
+		print_r($blockedNodes);
+		var_dump($this->checkTagAttribute('iframe', 'src'));
+		exit;
 
 		$blockedNodes = array_filter(
 			$blockedNodes,
 			function($node) use ($tagOverrides) {
+				$tagName = $node['name'];
+				if (isset($tagOverrides[$tagName])) {
+					foreach ($node['items'] as $nodeItem) {
+						foreach ($tagOverrides[$tagName] as $override) {
+							$attrbuteName  = $override['attribute'];
+							$nodeItemValue = $nodeItem->getAttribute($attrbuteName);
+
+							if ($nodeItemValue) {
+								$protocols = array('http:' => '', 'https:' => '');
+								$nodeItemValue = strtr($nodeItemValue, $protocols);
+
+								$foundOnFirstLine = false;
+								foreach ($override['values'] as $links) {
+									$pos = strpos($nodeItemValue, $links);
+									if ($pos === 0) {
+										$foundOnFirstLine = true;
+									}
+								}
+
+								if(!$foundOnFirstLine) {
+									//wala
+								}
+
+							}
+
+						}
+					}
+				}
 				return true;
 				// foreach ($tagOverrides as $tagOverride) {
 				// 	return array_reduce(
@@ -136,5 +205,19 @@ class NeatyHTML
 		}
 
 		return $this;
+	}
+
+	protected function setupConfigKeys($key, $overrides)
+	{
+		if(!is_array($overrides)) $overrides = [];
+
+		if($this->blockList[$key] && !$overrides) {
+			return $this->blockList[$key];
+		}
+
+		$configOverrides = require $key .'.php';
+		$this->blockList[$key] = array_merge($configOverrides, $overrides);
+
+		return $this->blockList[$key];
 	}
 }
