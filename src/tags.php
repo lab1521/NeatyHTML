@@ -1,10 +1,12 @@
 <?php
 return [
+	'applet',
 	'base',
 	'bgsound',
-	'body',
+	// 'body',
 	'script',
 	'head',
+	'isindex',
 	'meta',
 	'link',
 	'style',

@@ -6,8 +6,8 @@ class NeatyHTML
 	protected $document;
 	protected $markup;
 	protected $blockList = [
-		'attr' => [],
-		'tags' => [],
+		'attr'         => [],
+		'tags'         => [],
 		'tagOverrides' => [],
 	];
 
@@ -23,17 +23,28 @@ class NeatyHTML
 
 	public function __construct($markup)
 	{
-		$this->markup = $markup;
 		$this->document = new \DOMDocument('1.0', 'utf-8');
 		$this->loadHtml($markup);
 	}
 
+	/**
+	 * Loads HTML markup to DOMDocument
+	 * @param  string $markup HTML markup
+	 * @return object $this
+	 */
 	public function loadHtml($markup)
 	{
-		if ($markup) $this->document->loadHTML($markup);
+		if ($markup) {
+			$this->markup = $markup;
+			$this->document->loadHTML($this->markup);
+		}
 		return $this;
 	}
 
+	/**
+	 * Returns the generated markup string
+	 * @return string HTML
+	 */
 	public function html()
 	{
 		$body = $this->getBody();
@@ -45,6 +56,10 @@ class NeatyHTML
 		return strtr($this->document->saveHTML($body), $bodyTags);
 	}
 
+	/**
+	 * Returns the markup string of the body tag and children
+	 * @return string HTML
+	 */
 	public function getBody()
 	{
 		return $this->document
@@ -52,21 +67,43 @@ class NeatyHTML
 			->item(0);
 	}
 
+	/**
+	 * Custom tag overrides to allow blocked tags to display
+	 * @param  array  $overrides Collection of tag overrides
+	 * @return array
+	 */
 	public function tagOverrides($overrides = [])
 	{
 		return $this->setupConfigKeys('tagOverrides', $overrides);
 	}
 
+	/**
+	 * Blocked tags to delete from document
+	 * @param  array  $tags Collection of tags
+	 * @return array
+	 */
 	public function blockedTags($tags = [])
 	{
 		return $this->setupConfigKeys('tags', $tags);
 	}
 
+	/**
+	 * Blocked tag attributes to delete from document
+	 * @param  array  $attributes Collection of tag attributes
+	 * @return array
+	 */
 	public function blockedAttributes($attributes = [])
 	{
 		return $this->setupConfigKeys('attr', $attributes);
 	}
 
+	/**
+	 * Evaluates a tag with its attribute values from tag overrides
+	 * @param  string $tag            Tag name
+	 * @param  string $attributeName  Tag attribute
+	 * @param  string $attributeValue Tag attribute value
+	 * @return boolean                TRUE when attribute values passes overrides
+	 */
 	public function checkTagAttribute($tag, $attributeName, $attributeValue = '')
 	{
 		$tagOverrides = $this->tagOverrides();
@@ -93,120 +130,119 @@ class NeatyHTML
 			}, false);
 	}
 
-	public function tidyUp()
+	/**
+	 * Check blocked nodes array for later removal
+	 * @param  array $node Collection of blocked tags
+	 * @return boolean TRUE when an element is blocked for removal
+	 */
+	public function checkBlockedNodes($node)
 	{
-		$cleaner = new \tidy;
-		$cleaner->parseString($this->markup, $this->tidyConfig, 'utf8');
-		$cleaner->cleanRepair();
+		$isBlocked = true;
+		if (!$node['attribute']) $isBlocked = false;
+		if (!$node['elements']) $isBlocked = false;
 
-		$this->markup = $cleaner->body()->value;
-
-		$xpath = new \DOMXPath($this->document);
-
-		$blockedNodes = array_map(
-			function($tag) use ($xpath){
-				$paths = $xpath->query("//{$tag}");
-				$items = [];
-				foreach ($paths as $path) {
-					$items[] = $path;
+		if ($node['elements'] && $node['attribute']) {
+			foreach ($node['attribute'] as $attribute) {
+				foreach ($node['elements'] as $element) {
+					$attributeValue = $element->getAttribute($attribute);
+					if ($attributeValue) {
+						$isBlocked = !$this->checkTagAttribute($node['name'], $attribute, $attributeValue);
+					} else {
+						$isBlocked = true;
+					}
 				}
+			}
+		}
+		return $isBlocked;
+	}
+
+	/**
+	 * Remove unwanted tags
+	 * @param  object $xpath \DOMXPath instance
+	 * @return void
+	 */
+	public function tidyUpTags($xpath)
+	{
+		$tagOverrides = $this->tagOverrides();
+		$blockedNodes = array_map(
+			function($tag) use ($xpath, $tagOverrides) {
+				$paths = $xpath->query("//{$tag}");
+				$elements = [];
+				foreach ($paths as $path) {
+					$elements[] = $path;
+				}
+
+				$attributes = [];
+				if (isset($tagOverrides[$tag])) {
+					$attributes = array_map(
+						function($attr){
+							return $attr['attribute'];
+						},
+						$tagOverrides[$tag]);
+				}
+
 				return [
-					'name'  => $tag,
-					'items' => $items
+					'name'      => $tag,
+					'attribute' => $attributes,
+					'elements'  => $elements
 				];
 			},
 			$this->blockedTags()
 		);
 
-		print_r($blockedNodes);
-		var_dump($this->checkTagAttribute('iframe', 'src'));
-		exit;
-
 		$blockedNodes = array_filter(
 			$blockedNodes,
-			function($node) use ($tagOverrides) {
-				$tagName = $node['name'];
-				if (isset($tagOverrides[$tagName])) {
-					foreach ($node['items'] as $nodeItem) {
-						foreach ($tagOverrides[$tagName] as $override) {
-							$attrbuteName  = $override['attribute'];
-							$nodeItemValue = $nodeItem->getAttribute($attrbuteName);
-
-							if ($nodeItemValue) {
-								$protocols = array('http:' => '', 'https:' => '');
-								$nodeItemValue = strtr($nodeItemValue, $protocols);
-
-								$foundOnFirstLine = false;
-								foreach ($override['values'] as $links) {
-									$pos = strpos($nodeItemValue, $links);
-									if ($pos === 0) {
-										$foundOnFirstLine = true;
-									}
-								}
-
-								if(!$foundOnFirstLine) {
-									//wala
-								}
-
-							}
-
-						}
-					}
-				}
-				return true;
-				// foreach ($tagOverrides as $tagOverride) {
-				// 	return array_reduce(
-				// 		$node['items'],
-				// 		function($carry, $nodeItem) use ($tagOverride) {
-				// 			if ($carry === false) return $carry;
-
-				// 			$carry = array_reduce(
-				// 				$tagOverride,
-				// 				function($carry, $override) use ($nodeItem) {
-				// 					$nodeItemValue = $nodeItem->getAttribute($override['attribute']);
-				// 					if ($nodeItemValue && in_array($nodeItemValue, $override['values'])) {
-				// 						$carry = true;
-				// 					}
-				// 					return $carry;
-				// 				},
-				// 				false
-				// 			);
-
-				// 		},
-				// 		true
-				// 	);
-				// 	foreach ($node['items'] as $nodeItem) {
-				// 		$nodeItemValue = $nodeItem->getAttribute($attrName);
-				// 		if ($nodeItemValue && in_array($nodeItemValue, $attrValues)) {
-				// 			continue;
-				// 		}
-				// 	}
-				// }
-			}
+			array($this, 'checkBlockedNodes')
 		);
 
+		array_walk($blockedNodes, function($node){
+			foreach ($node['elements'] as $element) {
+				$element->parentNode->removeChild($element);
+			}
+		});
+	}
 
-		// foreach ($blockedNodes as $tag => $node) {
-		// 	if (isset($tagOverrides[$tag])) {
-		// 		$nodeAttributes = array_keys($tagOverrides[$tag]);
-		// 		foreach ($nodeAttributes as $attribute) {
-		// 			$attributeValue = $node->getAttribute($attribute);
-		// 			if (in_array($attributeValue, $tagOverrides[$tag][$attribute])) {
-		// 				continue;
-		// 			}
-		// 		}
-		// 	}
-		// 	$node->parentNode->removeChild($node);
-		// }
+	/**
+	 * Remove unwanted tag attributes
+	 * @param  object $xpath \DOMXPath instance
+	 * @return void
+	 */
+	public function tidyUpAttributes($xpath)
+	{
+		$blockedAttributes = $this->blockedAttributes();
+		array_walk($blockedAttributes,
+			function($attributeName) use ($xpath) {
+				$nodes = $xpath->query("//*[@{$attributeName}]");
+				foreach ($nodes as $node) {
+					$node->removeAttribute($attributeName);
+				}
+			});
+	}
 
-		$nodes = $xpath->query('//*[@onmouseover]');
-		foreach ($nodes as $node) {
-			$node->removeAttribute('onmouseover');
-		}
+	/**
+	 * Cleans up and remove unwanted tags and attributes
+	 * @return object Self
+	 */
+	public function tidyUp()
+	{
+		$cleaner = new \tidy;
+		$cleaner->parseString($this->markup, $this->tidyConfig, 'utf8');
+		$cleaner->cleanRepair();
+		$this->loadHtml($cleaner->body()->value);
+
+		$xpath = new \DOMXPath($this->document);
+		$this->tidyUpTags($xpath);
+		$this->tidyUpAttributes($xpath);
 
 		return $this;
 	}
 
+	/**
+	 * Loads configuration keys from relative file
+	 * @param  string $key      Configuration file types
+	 * @param  array $overrides Additional array configurations
+	 * @return array
+	 */
 	protected function setupConfigKeys($key, $overrides)
 	{
 		if(!is_array($overrides)) $overrides = [];
