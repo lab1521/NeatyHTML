@@ -1,5 +1,5 @@
 {
-    "name": "lab1521/NeatyHTML",
+    "name": "lab1521/neaty-html",
     "type": "library",
     "description": "Cleans up HTML markup with Tidy",
     "keywords": ["clean","html", "Tidy"],
