@@ -16,5 +16,5 @@ return [
 	'embed',
 	'video',
 	'audio',
-	'source',
+	'source'
 ];

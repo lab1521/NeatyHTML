@@ -5,6 +5,41 @@ use Lab1521\NeatyHTML;
 class NeatyHTMLTest extends TestCase
 {
 
+    public function testImageWhitelisting()
+    {
+        $transparentImage = '<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">';
+
+        $neaty = new NeatyHTML($transparentImage);
+        $neaty->blockedTags(['img']);
+
+        //This will be blocked
+        $this->assertEquals('', trim($neaty->tidyUp()->html()));
+
+        //This will allow tag overrides
+        $neaty->tagOverrides([
+            'img' => [
+                [
+                    'attribute' => 'src',
+                    'values' => [
+                        'data:image/gif',    //Inline data images
+                        'images/',           //Relative local images
+                        '//lorempixel.com/', //Absolute location
+                    ]
+                ],
+            ]
+        ]);
+
+        $this->assertEquals($transparentImage, trim($neaty->tidyUp()->html()));
+
+        $remoteImage = '<img src="http://lorempixel.com/100/100/">';
+        $neaty->loadHtml($remoteImage);
+        $this->assertEquals($remoteImage, trim($neaty->tidyUp()->html()));
+
+        $localImage = '<img src="images/logo.gif">';
+        $neaty->loadHtml($localImage);
+        $this->assertEquals($localImage, trim($neaty->tidyUp()->html()));
+    }
+
     public function testMalformedHTML()
     {
         $malform = '"><img src="x:x" onerror="alert(document.cookie)">';

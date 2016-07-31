@@ -138,8 +138,7 @@ class NeatyHTML
 	public function checkBlockedNodes($node)
 	{
 		$isBlocked = true;
-		if (!$node['attribute']) $isBlocked = false;
-		if (!$node['elements']) $isBlocked = false;
+		if (!$node['attribute']) $isBlocked = true;
 
 		if ($node['elements'] && $node['attribute']) {
 			foreach ($node['attribute'] as $attribute) {
@@ -240,19 +239,19 @@ class NeatyHTML
 	/**
 	 * Loads configuration keys from relative file
 	 * @param  string $key      Configuration file types
-	 * @param  array $overrides Additional array configurations
+	 * @param  array $moreConfig Additional array configurations
 	 * @return array
 	 */
-	protected function setupConfigKeys($key, $overrides)
+	protected function setupConfigKeys($key, $moreConfig)
 	{
-		if(!is_array($overrides)) $overrides = [];
+		if(!is_array($moreConfig)) $moreConfig = [];
 
-		if($this->blockList[$key] && !$overrides) {
+		if($this->blockList[$key] && !$moreConfig) {
 			return $this->blockList[$key];
 		}
 
-		$configOverrides = require $key .'.php';
-		$this->blockList[$key] = array_merge($configOverrides, $overrides);
+		$configFile = require $key .'.php';
+		$this->blockList[$key] = array_merge($configFile, $moreConfig);
 
 		return $this->blockList[$key];
 	}
