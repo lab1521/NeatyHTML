@@ -148,7 +148,7 @@ class NeatyHTML
 
 		$elements = array_reduce(
 			$node['elements'],
-			function ($carryElement, $element) use ($attributes) {
+			function ($carryElement,\DOMElement $element) use ($attributes) {
 				$isBlocked = true;
 				foreach ($attributes as $attribute) {
 					$hasFailed = !$this->checkTagAttribute($element->tagName, $attribute, $element->getAttribute($attribute));
@@ -208,7 +208,7 @@ class NeatyHTML
 		);
 
 		array_walk($blockedNodes,
-			function($node){
+			function(\DOMElement $node){
 				$node->parentNode->removeChild($node);
 			}
 		);
