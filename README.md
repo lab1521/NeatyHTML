@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/lab1521/NeatyHTML.svg?branch=master)](https://travis-ci.org/lab1521/NeatyHTML)
 
+[![SensioLabsInsight](https://insight.sensiolabs.com/projects/ed413d25-656d-48df-a607-58bf0f513049/big.png)](https://insight.sensiolabs.com/projects/ed413d25-656d-48df-a607-58bf0f513049)
+
 Cleans up your HTML. Useful for writing content or blogs that accepts HTML markup.
 Requires the PHP tidy class. Please install this extension first.
 ```php
