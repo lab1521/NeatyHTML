@@ -1,5 +1,6 @@
 # NeatyHTML
 Cleans up your HTML. Useful for writing content or blogs that accepts HTML markup.
+Requires the PHP tidy class. Please install this extension first.
 ```php
 <?php
 require('vendor/autoload.php');
