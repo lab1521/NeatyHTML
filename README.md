@@ -1,6 +1,8 @@
 # NeatyHTML
 
 [![Build Status](https://travis-ci.org/lab1521/NeatyHTML.svg?branch=master)](https://travis-ci.org/lab1521/NeatyHTML)
+[![Latest Stable Version](https://poser.pugx.org/lab1521/neaty-html/v/stable)](https://packagist.org/packages/lab1521/neaty-html)
+[![License](https://poser.pugx.org/lab1521/neaty-html/license)](https://packagist.org/packages/lab1521/neaty-html)
 
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/ed413d25-656d-48df-a607-58bf0f513049/big.png)](https://insight.sensiolabs.com/projects/ed413d25-656d-48df-a607-58bf0f513049)
 
