@@ -32,12 +32,15 @@ class NeatyHTML
 	 * @param  string $markup HTML markup
 	 * @return object $this
 	 */
-	public function loadHtml($markup)
+	public function loadHtml($markup = '')
 	{
+		$this->markup = $markup;
 		if ($markup) {
-			$this->markup = $markup;
 			$this->document->loadHTML($this->markup);
+		} else {
+			$this->document = new \DOMDocument('1.0', 'utf-8');
 		}
+
 		return $this;
 	}
 
@@ -135,24 +138,34 @@ class NeatyHTML
 	 * @param  array $node Collection of blocked tags
 	 * @return boolean TRUE when an element is blocked for removal
 	 */
-	public function checkBlockedNodes($node)
+	public function checkBlockedNodes($carry, $node)
 	{
-		$isBlocked = true;
-		if (!$node['attribute']) $isBlocked = true;
+		if (!$node['elements']) return $carry;
 
-		if ($node['elements'] && $node['attribute']) {
-			foreach ($node['attribute'] as $attribute) {
-				foreach ($node['elements'] as $element) {
-					$attributeValue = $element->getAttribute($attribute);
-					if ($attributeValue) {
-						$isBlocked = !$this->checkTagAttribute($node['name'], $attribute, $attributeValue);
-					} else {
-						$isBlocked = true;
+		if (!$node['attributes']) $carry += $node['elements'];
+
+		$attributes = $node['attributes'];
+
+		$elements = array_reduce(
+			$node['elements'],
+			function ($carryElement, $element) use ($attributes) {
+				$isBlocked = true;
+				foreach ($attributes as $attribute) {
+					$hasFailed = !$this->checkTagAttribute($element->tagName, $attribute, $element->getAttribute($attribute));
+					if ($isBlocked) {
+						$isBlocked = $hasFailed;
 					}
 				}
-			}
-		}
-		return $isBlocked;
+
+				if ($isBlocked) {
+					$carryElement[] = $element;
+				}
+				return $carryElement;
+			},
+			[]
+		);
+
+		return $carry += $elements;
 	}
 
 	/**
@@ -181,24 +194,24 @@ class NeatyHTML
 				}
 
 				return [
-					'name'      => $tag,
-					'attribute' => $attributes,
-					'elements'  => $elements
+					'name'       => $tag,
+					'attributes' => $attributes,
+					'elements'   => $elements
 				];
 			},
 			$this->blockedTags()
 		);
 
-		$blockedNodes = array_filter(
-			$blockedNodes,
-			array($this, 'checkBlockedNodes')
+		$blockedNodes = array_reduce($blockedNodes,
+			array($this, 'checkBlockedNodes'),
+			[]
 		);
 
-		array_walk($blockedNodes, function($node){
-			foreach ($node['elements'] as $element) {
-				$element->parentNode->removeChild($element);
+		array_walk($blockedNodes,
+			function($node){
+				$node->parentNode->removeChild($node);
 			}
-		});
+		);
 	}
 
 	/**
