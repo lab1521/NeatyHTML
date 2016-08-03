@@ -1,4 +1,7 @@
 # NeatyHTML
+
+[![Build Status](https://travis-ci.org/lab1521/NeatyHTML.svg?branch=master)](https://travis-ci.org/lab1521/NeatyHTML)
+
 Cleans up your HTML. Useful for writing content or blogs that accepts HTML markup.
 Requires the PHP tidy class. Please install this extension first.
 ```php
