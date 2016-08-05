@@ -6,21 +6,23 @@
 
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/ed413d25-656d-48df-a607-58bf0f513049/big.png)](https://insight.sensiolabs.com/projects/ed413d25-656d-48df-a607-58bf0f513049)
 
-Cleans up your HTML. Useful for writing content or blogs that accepts HTML markup.
-Requires the PHP tidy class. Please install this extension first.
+Cleans up your HTML. Useful for writing content or blogs that accepts HTML markup. Requires the PHP tidy class. Please install this extension first.
+
+## How to use
+
 ```php
 <?php
 require('vendor/autoload.php');
 use Lab1521\NeatyHTML;
 
-//Out of the box, removes onerror event which prevents eval to alert xss hack
+//Goal: Remove onerror attribute which prevents eval to alert
 $badImage = '<img src=x:alert(window) onerror=eval(src) alt="bad image">';
 $goodImage = '<img src="images/good.gif" alt="good image">';
 
-$neaty = new NeatyHTML($badImage . $goodImage);
+$neaty = NeatyHTML::loadHtml($badImage . $goodImage);
 
 //Outputs <img src="x:alert(window)" alt="bad image"><img src="images/good.gif" alt="good image">
-echo $neaty->tidyUp()->html();
+echo $neaty->tidyUp();
 
 //Further restrictions with source images
 $neaty->blockedTags(['img']);
@@ -33,9 +35,8 @@ $neaty->tagOverrides([
     ]
 ]);
 
-//Goal: Remove $badImage
-$neaty->loadHtml($badImage . $goodImage);
-
-//Outputs $goodImage only <img src="images/good.gif" alt="good image">
-echo $neaty->tidyUp()->html();
+//Outputs $goodImage only
+echo $neaty->tidyUp();
 ```
+
+## How to use

@@ -1,6 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-use Lab1521\NeatyHTML;
+use Lab1521\NeatyHTML\NeatyHTML;
 
 class NeatyHTMLTest extends TestCase
 {
@@ -10,16 +10,21 @@ class NeatyHTMLTest extends TestCase
         $badImage = '<img src=x:alert(window) onerror=eval(src) alt="bad image">';
         $goodImage = '<img src="images/good.gif" alt="good image">';
 
-        $neaty = new NeatyHTML($badImage . $goodImage);
+        $neaty = new NeatyHTML();
 
         //Outputs <img src="x:alert(window)" alt="bad image"><img src="images/good.gif" alt="good image">
         $this->assertEquals(
             '<img src="x:alert(window)" alt="bad image"><img src="images/good.gif" alt="good image">',
-            trim($neaty->tidyUp()->html())
+            trim($neaty->tidyUp($badImage . $goodImage))
         );
 
         //Further restrictions with source images
         $neaty->blockedTags(['img']);
+
+        //All images are now blocked
+        $this->assertEquals('', trim($neaty->tidyUp()));
+
+        //Adds exceptions for img tag previously blocked
         $neaty->tagOverrides([
             'img' => [
                 [
@@ -33,7 +38,7 @@ class NeatyHTMLTest extends TestCase
         $neaty->loadHtml($badImage . $goodImage);
 
         //Outputs $goodImage only
-        $this->assertEquals($goodImage, trim($neaty->tidyUp()->html()));
+        $this->assertEquals($goodImage, trim($neaty->tidyUp()));
     }
 
     public function testImageWhitelisting()
@@ -44,7 +49,7 @@ class NeatyHTMLTest extends TestCase
         $neaty->blockedTags(['img']);
 
         //This will be blocked
-        $this->assertEquals('', trim($neaty->tidyUp()->html()));
+        $this->assertEquals('', trim($neaty->tidyUp()));
 
         //This will allow tag overrides
         $neaty->tagOverrides([
@@ -60,15 +65,15 @@ class NeatyHTMLTest extends TestCase
             ]
         ]);
 
-        $this->assertEquals($transparentImage, trim($neaty->tidyUp()->html()));
+        $this->assertEquals($transparentImage, trim($neaty->tidyUp()));
 
         $remoteImage = '<img src="http://lorempixel.com/100/100/">';
         $neaty->loadHtml($remoteImage);
-        $this->assertEquals($remoteImage, trim($neaty->tidyUp()->html()));
+        $this->assertEquals($remoteImage, trim($neaty->tidyUp()));
 
         $localImage = '<img src="images/logo.gif">';
         $neaty->loadHtml($localImage);
-        $this->assertEquals($localImage, trim($neaty->tidyUp()->html()));
+        $this->assertEquals($localImage, trim($neaty->tidyUp()));
     }
 
     public function testMalformedHTML()
@@ -76,18 +81,18 @@ class NeatyHTMLTest extends TestCase
         $malform = '"><img src="x:x" onerror="alert(document.cookie)">';
 
         $neaty = new NeatyHTML($malform);
-        $this->assertEquals('"&gt;<img src="x:x">', trim($neaty->tidyUp()->html()));
+        $this->assertEquals('"&gt;<img src="x:x">', trim($neaty->tidyUp()));
     }
 
     public function testEventAttributes()
     {
         $linkTag = '<a onmouseover=alert(document.cookie)>COOKIE</a>';
         $neaty = new NeatyHTML($linkTag);
-        $this->assertEquals('<a>COOKIE</a>', trim($neaty->tidyUp()->html()));
+        $this->assertEquals('<a>COOKIE</a>', trim($neaty->tidyUp()));
 
         $imageTag = '<img src=x:alert(window) onerror=eval(src) alt=0>';
         $neaty = new NeatyHTML($imageTag);
-        $this->assertEquals('<img src="x:alert(window)" alt="0">', trim($neaty->tidyUp()->html()));
+        $this->assertEquals('<img src="x:alert(window)" alt="0">', trim($neaty->tidyUp()));
     }
 
     public function testHeadChildTags()
@@ -98,9 +103,11 @@ class NeatyHTMLTest extends TestCase
 
         $neaty = new NeatyHTML($styleTag);
         $this->assertEquals('', $neaty->html());
+        $this->assertEquals('', trim($neaty->tidyUp()));
 
         $neaty = new NeatyHTML($scriptTag . $acceptedTag);
         $this->assertEquals($acceptedTag, $neaty->html());
+        $this->assertEquals($acceptedTag, preg_replace('/\s\s+/', '', trim($neaty->tidyUp())));
     }
 
     public function testIFrameTag()
@@ -108,9 +115,9 @@ class NeatyHTMLTest extends TestCase
         $iframeTag = '<iframe src="javascript:alert(document.cookie);" frameborder="0"></iframe>';
         $paragraph = '<p> <a href="https://github.com/marczhermo/NeatyHTML">NeatyHTML Demo</a> </p>';
 
-        $neaty = new NeatyHTML($iframeTag . $paragraph);
-        $cleanHTML = preg_replace('/\n/', '', trim($neaty->tidyUp()->html()));
-        $cleanHTML = trim(preg_replace('/\s\s+/', ' ', $cleanHTML));
+        $neaty = new NeatyHTML();
+        $cleanHTML = preg_replace('/\n/', '', trim($neaty->tidyUp($iframeTag . $paragraph)));
+        $cleanHTML = preg_replace('/\s\s+/', ' ', $cleanHTML);
         $this->assertEquals($paragraph, $cleanHTML);
     }
 }

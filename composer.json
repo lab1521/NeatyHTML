@@ -21,7 +21,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Lab1521\\": "src/"
+            "Lab1521\\NeatyHTML\\": "src/"
         }
     }
 }

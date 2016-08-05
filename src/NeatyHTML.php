@@ -1,5 +1,5 @@
 <?php
-namespace Lab1521;
+namespace Lab1521\NeatyHTML;
 
 class NeatyHTML
 {
@@ -21,9 +21,8 @@ class NeatyHTML
 		'show-body-only'              => true,
 	];
 
-	public function __construct($markup)
+	public function __construct($markup = '')
 	{
-		$this->document = new \DOMDocument('1.0', 'utf-8');
 		$this->loadHtml($markup);
 	}
 
@@ -35,10 +34,10 @@ class NeatyHTML
 	public function loadHtml($markup = '')
 	{
 		$this->markup = $markup;
-		if ($markup) {
+		$this->document = new \DOMDocument('1.0', 'utf-8');
+
+		if ($this->markup) {
 			$this->document->loadHTML($this->markup);
-		} else {
-			$this->document = new \DOMDocument('1.0', 'utf-8');
 		}
 
 		return $this;
@@ -233,12 +232,13 @@ class NeatyHTML
 
 	/**
 	 * Cleans up and remove unwanted tags and attributes
-	 * @return object Self
+	 * @param  string $markup HTML markup
+	 * @return string HTML
 	 */
-	public function tidyUp()
+	public function tidyUp($markup = '')
 	{
-		$cleaner = new \tidy;
-		$cleaner->parseString($this->markup, $this->tidyConfig, 'utf8');
+		if ($markup) $this->loadHtml($markup);
+		$cleaner = tidy_parse_string($this->markup, $this->tidyConfig, 'UTF8');
 		$cleaner->cleanRepair();
 		$this->loadHtml($cleaner->body()->value);
 
@@ -246,7 +246,7 @@ class NeatyHTML
 		$this->tidyUpTags($xpath);
 		$this->tidyUpAttributes($xpath);
 
-		return $this;
+		return $this->html();
 	}
 
 	/**
@@ -263,7 +263,7 @@ class NeatyHTML
 			return $this->blockList[$key];
 		}
 
-		$configFile = require $key .'.php';
+		$configFile = require "config/{$key}.php";
 		$this->blockList[$key] = array_merge($configFile, $moreConfig);
 
 		return $this->blockList[$key];

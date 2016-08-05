@@ -9,7 +9,7 @@ $goodImage = '<img src="images/good.gif" alt="good image">';
 $neaty = new NeatyHTML($badImage . $goodImage);
 
 //Outputs <img src="x:alert(window)" alt="bad image"><img src="images/good.gif" alt="good image">
-echo $neaty->tidyUp()->html();
+echo $neaty->tidyUp();
 
 //Further restrictions with source images
 $neaty->blockedTags(['img']);
@@ -26,4 +26,4 @@ $neaty->tagOverrides([
 $neaty->loadHtml($badImage . $goodImage);
 
 //Outputs $goodImage only
-echo $neaty->tidyUp()->html();
+echo $neaty->tidyUp();
