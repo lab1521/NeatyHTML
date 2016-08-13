@@ -50,7 +50,7 @@ class NeatyHTML
                     ' on line '.$error->line.
                     ' and column '.$error->column.' markup.');
             }
-            // $this->document->normalizeDocument();
+            $this->document->normalizeDocument();
         }
 
         return $this;
