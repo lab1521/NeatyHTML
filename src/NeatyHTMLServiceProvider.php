@@ -15,8 +15,6 @@ class NeatyHTMLServiceProvider extends ServiceProvider
 
     /**
      * Bootstrap the application services.
-     *
-     * @return void
      */
     public function boot()
     {
@@ -25,8 +23,6 @@ class NeatyHTMLServiceProvider extends ServiceProvider
 
     /**
      * Register the application services.
-     *
-     * @return void
      */
     public function register()
     {
@@ -44,5 +40,4 @@ class NeatyHTMLServiceProvider extends ServiceProvider
     {
         return [NeatyHTML::class];
     }
-
 }

@@ -1,9 +1,46 @@
 <?php
+
+namespace Lab1521;
+
 use PHPUnit\Framework\TestCase;
 use Lab1521\NeatyHTML\NeatyHTML;
 
 class NeatyHTMLTest extends TestCase
 {
+    public function testBadXSSMarkup()
+    {
+        $goodImage = '<img src="images/good.gif" alt="good image">';
+        $badXSS = <<<'HTML'
+<Img src = x onerror = "javascript: window.onerror = alert; throw XSS">
+<applet code="javascript:confirm(document.cookie);"></applet>
+<isindex x="javascript:" onmouseover="alert(XSS)">
+<SCRIPT>alert(String.fromCharCode(88,83,83))</SCRIPT>
+<img src="x:x" onerror="alert(XSS)">
+<iframe src="javascript:alert(XSS)"></iframe>
+<object data="javascript:alert(XSS)"></object>
+<isindex type=image src=1 onerror=alert(XSS)>
+<img src=x:alert(alt) onerror=eval(src) alt=0>
+<img  src="x:gif" onerror="window['al\u0065rt'](0)">
+HTML;
+
+        $neaty = new NeatyHTML($badXSS.$goodImage);
+
+        //Further restrictions with source images
+        $neaty->blockedTags(['img']);
+        //Adds exceptions for img tag previously blocked
+        $neaty->tagOverrides([
+            'img' => [
+                [
+                    'attribute' => 'src',
+                    'values' => ['images/'], //restricts to local folder
+                ],
+            ],
+        ]);
+
+        //Outputs $goodImage only
+        $this->assertEquals($goodImage, trim($neaty->tidyUp()));
+    }
+
     public function testMultipeImages()
     {
         //Goal: Remove onerror attribute which prevents eval to alert
@@ -15,7 +52,7 @@ class NeatyHTMLTest extends TestCase
         //Outputs <img src="x:alert(window)" alt="bad image"><img src="images/good.gif" alt="good image">
         $this->assertEquals(
             '<img src="x:alert(window)" alt="bad image"><img src="images/good.gif" alt="good image">',
-            trim($neaty->tidyUp($badImage . $goodImage))
+            trim($neaty->tidyUp($badImage.$goodImage))
         );
 
         //Further restrictions with source images
@@ -29,13 +66,13 @@ class NeatyHTMLTest extends TestCase
             'img' => [
                 [
                     'attribute' => 'src',
-                    'values' => ['images/'] //restricts to local folder
+                    'values' => ['images/'], //restricts to local folder
                 ],
-            ]
+            ],
         ]);
 
         //Goal: Remove $badImage
-        $neaty->loadHtml($badImage . $goodImage);
+        $neaty->loadHtml($badImage.$goodImage);
 
         //Outputs $goodImage only
         $this->assertEquals($goodImage, trim($neaty->tidyUp()));
@@ -60,9 +97,9 @@ class NeatyHTMLTest extends TestCase
                         'data:image/gif',    //Inline data images
                         'images/',           //Relative local images
                         '//lorempixel.com/', //Absolute location
-                    ]
+                    ],
                 ],
-            ]
+            ],
         ]);
 
         $this->assertEquals($transparentImage, trim($neaty->tidyUp()));
@@ -105,7 +142,7 @@ class NeatyHTMLTest extends TestCase
         $this->assertEquals('', $neaty->html());
         $this->assertEquals('', trim($neaty->tidyUp()));
 
-        $neaty = new NeatyHTML($scriptTag . $acceptedTag);
+        $neaty = new NeatyHTML($scriptTag.$acceptedTag);
         $this->assertEquals($acceptedTag, $neaty->html());
         $this->assertEquals($acceptedTag, preg_replace('/\s\s+/', '', trim($neaty->tidyUp())));
     }
@@ -116,7 +153,7 @@ class NeatyHTMLTest extends TestCase
         $paragraph = '<p> <a href="https://github.com/marczhermo/NeatyHTML">NeatyHTML Demo</a> </p>';
 
         $neaty = new NeatyHTML();
-        $cleanHTML = preg_replace('/\n/', '', trim($neaty->tidyUp($iframeTag . $paragraph)));
+        $cleanHTML = preg_replace('/\n/', '', trim($neaty->tidyUp($iframeTag.$paragraph)));
         $cleanHTML = preg_replace('/\s\s+/', ' ', $cleanHTML);
         $this->assertEquals($paragraph, $cleanHTML);
     }
