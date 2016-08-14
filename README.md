@@ -5,7 +5,7 @@
 
 Cleans up your HTML. Useful for writing content or blogs that accepts HTML markup. Requires the PHP tidy class. Please install this extension first.
 
-Accepting HTML contents (with markups/tags included etc.) on your website is somewhat a concern regarding the security of your website and its users. The dreaded XSS or Cross Site Scripting is always a treat. However with the power of open source we can keep up with common treats and mitigate the issues for safekeeping our websites or blogs.
+Accepting HTML contents (with markups/tags included etc.) on your website is somewhat a concern regarding the security of your website and its users. The dreaded XSS or Cross Site Scripting is always a threat. However with the power of open source we can keep up with common threats and mitigate the issues for safekeeping our websites or blogs.
 
 
 ## Installation
@@ -46,6 +46,10 @@ $neaty->loadHtml($badImage . $goodImage);
 //Outputs $goodImage only
 echo $neaty->tidyUp();
 ```
+
+### Limitations
+
+Current PHP's DomDocument class does not support HTML5 tags/attributes. For this reason a NeatyXMLError exception is thrown.
 
 ## Laravel Specific Usage
 ### Service provider

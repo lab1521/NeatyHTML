@@ -1,12 +1,26 @@
 <?php
 
-namespace Lab1521;
+namespace Lab1521\NeatyHTML;
 
 use PHPUnit\Framework\TestCase;
-use Lab1521\NeatyHTML\NeatyHTML;
 
 class NeatyHTMLTest extends TestCase
 {
+    public function testUnsupportedHTML5()
+    {
+        $goodImage = '<img src="images/good.gif" alt="good image">';
+        $html5 = '<figure>'.$goodImage.'</figure>';
+
+        try {
+            $neaty = new NeatyHTML($html5);
+        } catch (NeatyXMLError $error) {
+            $this->assertContains('Tag figure invalid', $error->getMessage());
+        }
+
+        $this->expectException(NeatyXMLError::class);
+        $neaty = new NeatyHTML($html5);
+    }
+
     public function testBadXSSMarkup()
     {
         $goodImage = '<img src="images/good.gif" alt="good image">';

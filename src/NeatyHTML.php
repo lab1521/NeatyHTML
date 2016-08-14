@@ -46,7 +46,7 @@ class NeatyHTML
             libxml_use_internal_errors($current);
             if ($error) {
                 libxml_clear_errors();
-                throw new NeatyXMLError($error->message.
+                throw new NeatyXMLError(trim($error->message).
                     ' on line '.$error->line.
                     ' and column '.$error->column.' markup.');
             }
