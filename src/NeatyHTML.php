@@ -41,7 +41,7 @@ class NeatyHTML
 
         if ($this->markup) {
             $current = libxml_use_internal_errors(true);
-            @$this->document->loadHTML($this->markup);
+            $this->document->loadHTML($this->markup);
             $error = libxml_get_last_error();
             libxml_use_internal_errors($current);
             if ($error) {
