@@ -25,7 +25,7 @@ class NeatyHTMLServiceProvider extends ServiceProvider
                 $validator->setCustomMessages(['body.html' => 'Empty HTML.']);
 
                 return (bool) trim($neaty->tidyUp());
-            } catch (NeatyXMLError $error) {
+            } catch (NeatyDOMException $error) {
                 $validator->setCustomMessages(['body.html' => $error->getMessage()]);
             }
 

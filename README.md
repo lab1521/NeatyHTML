@@ -49,7 +49,7 @@ echo $neaty->tidyUp();
 
 ### Limitations
 
-Current PHP's DomDocument class does not support HTML5 tags/attributes. For this reason a NeatyXMLError exception is thrown.
+Current PHP's DomDocument class does not support HTML5 tags/attributes. For this reason a NeatyDOMException exception is thrown.
 
 ## Laravel Specific Usage
 ### Service provider

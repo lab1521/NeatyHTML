@@ -13,11 +13,11 @@ class NeatyHTMLTest extends TestCase
 
         try {
             $neaty = new NeatyHTML($html5);
-        } catch (NeatyXMLError $error) {
+        } catch (NeatyDOMException $error) {
             $this->assertContains('Tag figure invalid', $error->getMessage());
         }
 
-        $this->expectException(NeatyXMLError::class);
+        $this->expectException(NeatyDOMException::class);
         $neaty = new NeatyHTML($html5);
     }
 
