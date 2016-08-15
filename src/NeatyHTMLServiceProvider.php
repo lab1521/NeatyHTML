@@ -3,6 +3,7 @@
 namespace Lab1521\NeatyHTML;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Validator as ValidatorInstance;
 use Validator;
 
 class NeatyHTMLServiceProvider extends ServiceProvider
@@ -19,7 +20,7 @@ class NeatyHTMLServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        Validator::extend('html', function ($attribute, $value, $parameters, $validator) {
+        Validator::extend('html', function ($attribute, $value, $parameters, ValidatorInstance $validator) {
             try {
                 $neaty = new NeatyHTML($value);
                 $validator->setCustomMessages(['body.html' => 'Empty HTML.']);
