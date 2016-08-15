@@ -3,6 +3,7 @@
 namespace Lab1521\NeatyHTML;
 
 use Illuminate\Support\ServiceProvider;
+use Validator;
 
 class NeatyHTMLServiceProvider extends ServiceProvider
 {
@@ -18,7 +19,18 @@ class NeatyHTMLServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        Validator::extend('html', function ($attribute, $value, $parameters, $validator) {
+            try {
+                $neaty = new NeatyHTML($value);
+                $validator->setCustomMessages(['body.html' => 'Empty HTML.']);
+
+                return (bool) trim($neaty->tidyUp());
+            } catch (NeatyXMLError $error) {
+                $validator->setCustomMessages(['body.html' => $error->getMessage()]);
+            }
+
+            return false;
+        });
     }
 
     /**
