@@ -2,7 +2,7 @@
     "name": "lab1521/neaty-html",
     "type": "library",
     "description": "Cleans up HTML markup with Tidy",
-    "keywords": ["clean","html", "Tidy"],
+    "keywords": ["clean", "html", "tidy", "laravel", "validation"],
     "homepage": "https://github.com/lab1521/NeatyHTML",
     "license": "MIT",
     "authors": [
