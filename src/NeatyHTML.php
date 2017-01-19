@@ -7,23 +7,7 @@ class NeatyHTML
     use Overrides;
 
     protected $doc;
-    protected $document;
     protected $markup;
-    protected $blockList = [
-        'attr' => [],
-        'tags' => [],
-        'tagOverrides' => [],
-    ];
-
-    protected $tidyConfig = [
-        'indent' => true,
-        'output-html' => true,
-        'drop-font-tags' => true,
-        'clean' => true,
-        'merge-spans' => true,
-        'drop-proprietary-attributes' => true,
-        'show-body-only' => true,
-    ];
 
     public function __construct($markup = '')
     {
